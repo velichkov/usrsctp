@@ -1230,6 +1230,17 @@ recv_thread_init(void)
 				} else {
 					setReceiveBufferSize(SCTP_BASE_VAR(userspace_udpsctp), SB_RAW); /* 128K */
 					setSendBufferSize(SCTP_BASE_VAR(userspace_udpsctp), SB_RAW); /* 128K Is this setting net.inet.raw.maxdgram value? Should it be set to 64K? */
+					if (SCTP_BASE_SYSCTL(sctp_udp_tunneling_port) == 0)
+					{
+						memset((void *)&addr_ipv4, 0, sizeof(struct sockaddr_in));
+						socklen_t addr_len = sizeof(struct sockaddr_in);
+						if (getsockname(SCTP_BASE_VAR(userspace_udpsctp), &addr_ipv4, &addr_len) == 0 &&
+								addr_len == sizeof(struct sockaddr_in) &&
+								addr_ipv4.sin_family == AF_INET)
+						{
+							SCTP_BASE_SYSCTL(sctp_udp_tunneling_port) = ntohs(addr_ipv4.sin_port);
+						}
+					}
 				}
 			}
 		}
@@ -1376,6 +1387,17 @@ recv_thread_init(void)
 				} else {
 					setReceiveBufferSize(SCTP_BASE_VAR(userspace_udpsctp6), SB_RAW); /* 128K */
 					setSendBufferSize(SCTP_BASE_VAR(userspace_udpsctp6), SB_RAW); /* 128K Is this setting net.inet.raw.maxdgram value? Should it be set to 64K? */
+					if (SCTP_BASE_SYSCTL(sctp_udp_tunneling_port) == 0)
+					{
+						socklen_t addr_len = sizeof(struct sockaddr_in6);
+						if (getsockname(SCTP_BASE_VAR(userspace_udpsctp6), &addr_ipv6, &addr_len) == 0 &&
+								addr_len == sizeof(struct sockaddr_in6) &&
+								addr_ipv6.sin6_family == AF_INET6)
+
+						{
+							SCTP_BASE_SYSCTL(sctp_udp_tunneling_port) = ntohs(addr_ipv6.sin6_port);
+						}
+					}
 				}
 			}
 		}
